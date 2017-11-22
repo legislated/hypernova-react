@@ -3,11 +3,21 @@ import ReactDOM from 'react-dom';
 import ReactDOMServer from 'react-dom/server';
 import hypernova, { serialize, load } from 'hypernova';
 
-export const renderReact = (name, component) => hypernova({
+function renderToString(component, props) {
+  return ReactDOMServer.renderToString(React.createElement(component, props));
+}
+
+export const renderReact = (name, component, config) => hypernova({
   server() {
     return (props) => {
-      const contents = ReactDOMServer.renderToString(React.createElement(component, props));
-      return serialize(name, contents, props);
+      if (!config.serialize) {
+        return serialize(name, renderToString(component, props), props)
+      }
+
+      return config.serialize(
+        () => renderToString(component, props),
+        (html) => serialize(name, html, props)
+      )
     };
   },
 
