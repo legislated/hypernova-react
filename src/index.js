@@ -10,14 +10,15 @@ function renderToString(component, props) {
 export const renderReact = (name, component, config) => hypernova({
   server() {
     return (props) => {
-      if (!config.serialize) {
-        return serialize(name, renderToString(component, props), props)
-      }
+      const markup = renderToString(component, props);
 
-      return config.serialize(
-        () => renderToString(component, props),
-        (html) => serialize(name, html, props)
-      )
+      if (!config.serialize) {
+        return serialize(name, markup, props);
+      } else {
+        return config.serialize(markup, (html) => (
+          serialize(name, html, props)
+        ));
+      }
     };
   },
 
@@ -28,7 +29,7 @@ export const renderReact = (name, component, config) => hypernova({
       payloads.forEach((payload) => {
         const { node, data } = payload;
         const element = React.createElement(component, data);
-        ReactDOM.render(element, node);
+        ReactDOM.hydrate(element, node);
       });
     }
 
